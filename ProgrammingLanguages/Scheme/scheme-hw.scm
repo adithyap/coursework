@@ -34,7 +34,7 @@
 ;; Question 2
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; (removeMults m L) returns a list containing all elements of L which
+;; (removeMults m L) Returns a list containing all elements of L which
 ;;                   are not a multiple of m
 ;;
 ;; Base Case:        If list size is zero, return empty list
