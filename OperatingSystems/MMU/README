@@ -1,0 +1,11 @@
+COMPILING: Use make file
+———------------------------
+
+make
+
+RUNNING:
+———------------------------
+
+./mmu [-a<algo>] [-o<options>] [–f<num_frames>] inputfile randomfile
+
+E.g. ./mmu -aN -oPFS -f32 in1M2 rfile
