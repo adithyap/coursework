@@ -13,7 +13,7 @@
 using namespace std;
 
 /**
- * Holds a site and the associated information
+ * Holds a site and its associated information
  */
 class Site {
 
