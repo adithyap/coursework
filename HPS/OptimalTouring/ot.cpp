@@ -11,9 +11,15 @@
 #include <queue>
 #include <thread>
 #include <random>
+#include <cstdlib>
+#include <ctime>
 
-#define SITE_LIMIT 200
-#define DAY_LIMIT 10
+#define SITE_LIMIT 300
+#define DAY_LIMIT 20
+
+#define THREADS 8
+#define CANDIDATES 3
+#define SEARCH_DEPTH 10
 
 using namespace std;
 
@@ -368,9 +374,6 @@ public:
      */
     static TourPlan getTourPlan(Touring touring) {
 
-        // Threading limit
-        const int THREADS = 4;
-
         // List of threads and visit plans
         TourPlan plans[THREADS];
         vector<thread*> pthreads;
@@ -428,9 +431,15 @@ public:
                 }
             }
 
+            // Get visit plan and add to day plan
             VisitPlan visitPlan = touring.getDayPlan(i, validSites);
-
             plan.addPlan(i, visitPlan);
+
+            // Mark visited sites
+            for (deque< Site* >::iterator it = visitPlan.plan.begin(); 
+                it != visitPlan.plan.end(); it++) {
+                visitedIds.insert(make_pair((*it)->id, true));
+            }
         }
 
         // Set plan
@@ -443,7 +452,6 @@ public:
     VisitPlan getDayPlan(int day, vector<Site*> sites) {
 
         // Heuristics
-        const int CANDIDATES = 5;
         vector<VisitPlan> visitCandidates;
 
         VisitPlan bestPlan;
@@ -483,25 +491,23 @@ public:
         for (vector<VisitPlan>::iterator it = visitCandidates.begin(); 
             it != visitCandidates.end(); it++) {
 
-            float weight = exp( float(day) * (*it).value * (0.01) );
+            float weight = exp( (float)day * (*it).value * (0.01) );
 
             weights.push_back(weight);
             weightSum += weight;
         }
 
         // Pick a random element
-        random_device rd; // obtain a random number from hardware
-        mt19937 eng(rd()); // seed the generator
-        uniform_int_distribution<float> distr(0, weightSum);
-        float randomNumber = distr(eng);
+        float randomNumber = (float)rand()/(float)(RAND_MAX / weightSum);
 
-        for (int i = 0; i < visitCandidates.size(); i++) {
+        for (int i = 0; i < CANDIDATES; i++) {
 
-            randomNumber -= weights[i];
-            if (randomNumber <= 0) {
+            if (randomNumber < weights[i]) {
                 bestPlan = visitCandidates[i];
                 break;
             }
+
+            randomNumber -= weights[i];
         }
 
         return bestPlan;
@@ -580,27 +586,20 @@ public:
 
     /**
      * Returns a subset of all candidate sites
-     * Pruning strategy:
-     * To explain :P
+     * Consider only top 40% sites closes to current and top 40% sites by value
      */
     vector<Site*> get_candidate_sites(Site* current, vector<Site*> sites) {
 
-        // Treshold for each heuristic
-        float byTimeWeight = 0.3;
-        float byValueWeight = 0.3;
-
         // Get size
         int size = sites.size();
-        int limit;
+        int limit = size > SEARCH_DEPTH ? SEARCH_DEPTH : size;
 
         // Sort by time
         sort(sites.begin(), sites.end(), VisitTimeOrdering(current));
-        limit = size * byTimeWeight;
         vector<Site*> timeSortedSites(sites.begin(), sites.begin() + limit);
 
         // Sort by value
         sort(sites.begin(), sites.end(), ValueOrdering());
-        limit = size * byValueWeight;
         vector<Site*> valueSortedSites(sites.begin(), sites.begin() + limit);
 
         // Merge lists
@@ -656,20 +655,31 @@ public:
     };
 };
 
+// Set static variable
 int InputProcessor::totalDays = 0;
 
 int main() {
 
+    // Initialize random seed
+    srand((unsigned int)time(NULL));
+
     // Must be changed to read from command line args
     // Get sites from reading the input file
-    vector<Site*> sites = InputProcessor::readInput("input.txt");
+    vector<Site*> sites = InputProcessor::readInput("largeop.txt");
 
     // Initialize touring object
     Touring touring(sites);
 
     // Get tour plan and print
     TourPlan tourPlan = Touring::getTourPlan(touring);
-    tourPlan.output();
+    // tourPlan.output();
+    printf("%f\n", tourPlan.getPlanValue());
 
     return 0;
 }
+
+// Compilation on Linux
+// g++ -O3 --std=c++11 -lpthread -static-libstdc++ ot.cpp 
+
+// Compilation on Mac
+// g++ -O3 --std=c++11 ot.cpp 
