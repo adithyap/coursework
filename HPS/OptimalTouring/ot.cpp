@@ -17,9 +17,10 @@
 #define SITE_LIMIT 300
 #define DAY_LIMIT 20
 
-#define THREADS 8
-#define CANDIDATES 3
-#define SEARCH_DEPTH 10
+#define THREADS 16      // Set to the number of available processors
+#define CANDIDATES 3    // Larger candidate pool of sub optimal solutions often lead to 
+                        // poorer overall solutions (owing to the higher degree of randomness).
+#define SEARCH_DEPTH 10 // Search depth is an exponential factor. Increment with caution.
 
 using namespace std;
 
@@ -658,22 +659,28 @@ public:
 // Set static variable
 int InputProcessor::totalDays = 0;
 
-int main() {
+int main(int argc,  char **argv) {
 
     // Initialize random seed
     srand((unsigned int)time(NULL));
 
-    // Must be changed to read from command line args
+    string filename;
+
+    if (argc < 2) {
+        filename = "given_info.txt";
+    } else {
+        filename = argv[1];
+    }
+
     // Get sites from reading the input file
-    vector<Site*> sites = InputProcessor::readInput("largeop.txt");
+    vector<Site*> sites = InputProcessor::readInput(filename);
 
     // Initialize touring object
     Touring touring(sites);
 
     // Get tour plan and print
     TourPlan tourPlan = Touring::getTourPlan(touring);
-    // tourPlan.output();
-    printf("%f\n", tourPlan.getPlanValue());
+    tourPlan.output();
 
     return 0;
 }
